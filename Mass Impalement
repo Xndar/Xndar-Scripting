@@ -1,0 +1,86 @@
+//::///////////////////////////////////////////////
+//:: Mass Impalement (Metacreativity)
+//:://////////////////////////////////////////////
+/*
+	Epic Power
+	
+    Mass Impalement deals 20d6 slashing and 10d6 
+	piercing damage to any caught in its AOE.
+	AOE is centered around the caster. 
+	Reflex save for half-damage.
+*/
+//:://////////////////////////////////////////////
+//:: Created By: Xndar
+//:: Created On: June 30, 2015
+//:://////////////////////////////////////////////
+
+#include "nwn2_inc_spells"
+#include "psi_inc_psifunc"
+#include "psi_inc_pwresist"
+#include "X0_I0_SPELLS"
+#include "x2_inc_spellhook" 
+
+void main()
+{
+
+//
+
+    if (!X2PreSpellCastCode())
+    {
+	// If code within the PreSpellCastHook (i.e. UMD) reports FALSE, do not run this spell
+        return;
+    }
+    // End of Spell Cast Hook
+    object oManifester = OBJECT_SELF;
+    object oTarget;
+    int nInt = GetAbilityModifier(ABILITY_INTELLIGENCE, oManifester);
+    int nDC = 20 + nInt;
+    //Calculates power dc
+    object oCaster = OBJECT_SELF;
+    
+    
+    int nDamage;
+	
+    float fDelay;
+    effect eVis = EffectNWN2SpecialEffectFile("psi_crystal_hit.sef", oTarget);
+    //Defines visual effect to use if damage is applied.
+    effect eDam,eDam2;
+    
+    location lTarget = GetSpellTargetLocation();
+    
+    //Declare the spell shape, size and the location.  Capture the first target object in the shape.
+    oTarget = GetFirstObjectInShape(SHAPE_SPHERE, RADIUS_SIZE_ASTRONOMIC, lTarget, TRUE, OBJECT_TYPE_CREATURE | OBJECT_TYPE_DOOR | OBJECT_TYPE_PLACEABLE);
+    //Cycle through the targets within the spell shape until an invalid object is captured.
+    while (GetIsObjectValid(oTarget))
+    {
+        if (spellsIsTarget(oTarget, SPELL_TARGET_STANDARDHOSTILE, OBJECT_SELF) && oTarget != oCaster) //Additional target check to make sure that the caster cannot be harmed by this spell
+        {
+            fDelay = GetRandomDelay(0.15, 0.35);
+            //Fire cast spell at event for the specified target
+            SignalEvent(oTarget, EventSpellCastAt(OBJECT_SELF, 14354));
+            
+            nDamage = d8(20);
+            nDamage = GetReflexAdjustedDamage(nDamage, oTarget, nDC, SAVING_THROW_TYPE_NONE);
+            //Calculates base damage amount. If target succeeds in a reflex save against the spell dc
+            //(nDC) the damage is halved.
+            
+            
+            if ( nDamage > 0 )
+            {
+                    
+                    eDam = EffectDamage(nDamage, DAMAGE_TYPE_SLASHING);
+                    eDam2 = EffectDamage((nDamage/2), DAMAGE_TYPE_PIERCING);
+                    // Apply the damage effects, and define damage types.
+                    DelayCommand(fDelay, ApplyEffectToObject(DURATION_TYPE_INSTANT, eDam, oTarget));
+                    DelayCommand(fDelay, ApplyEffectToObject(DURATION_TYPE_INSTANT, eDam2, oTarget));
+                    
+                    DelayCommand(fDelay, ApplyEffectToObject(DURATION_TYPE_INSTANT, eVis, oTarget));
+                    //This visual effect is applied to the target object not the location as above.  This visual effect
+                    //represents the impact that erupts on the target not on the ground.
+            } 
+                
+        }
+       //Select the next target within the spell shape.
+       oTarget = GetNextObjectInShape(SHAPE_SPHERE, RADIUS_SIZE_ASTRONOMIC, lTarget, TRUE, OBJECT_TYPE_CREATURE | OBJECT_TYPE_DOOR | OBJECT_TYPE_PLACEABLE);
+    }
+}
