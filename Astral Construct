@@ -41,16 +41,18 @@ void main()
     int nMetaMagic = GetMetaMagicFeat();
 	int nPP = GetLocalInt(OBJECT_SELF, "PSI_PP");
 	int nPPCost;
+	//Will handle the power cost, to be defined later depending on which casting tier the psion has.
 	int nManifesterTier = GetLevelByClass(90, OBJECT_SELF);
     int nCasterLevel = GetLevelByClass(90, OBJECT_SELF);
     int nDuration = nCasterLevel;
 	
     effect eSummon;
-    //Metamagic extension if needed
+    //The summon effect definition will follow, along with the creature blueprint called by the string between " ".
     
     
 		
     switch (nManifesterTier)
+    //Manifester 1st tier begins at level 1, 2nd tier begins at 3, 3rd at 5 and so forth up to 9th tier at 16 levels in psion/
 	{
 		case 3: case 4:
 		{
